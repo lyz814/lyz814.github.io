@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运动损伤预防与康复智能辅助系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,"Microsoft YaHei",sans-serif}
+body{
+    background-color: #103827;
+    background-image: url("data:image/svg+xml,%3Csvg width='180' height='140' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q45 20 90 40 T180 40' stroke='%23245c42' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cpath d='M0 80 Q45 60 90 80 T180 80' stroke='%23245c42' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3C/svg%3E");
+    color:#fff;
+}
+.header{
+    background: linear-gradient(135deg,#0f3525,#154734);
+    color:#ffd700;
+    padding:24px 16px;
+    text-align:center;
+    border-bottom:1px solid rgba(255,215,0,0.2);
+}
+.header h1{
+    font-size:22px;
+    font-weight:bold;
+    letter-spacing:1px;
+    text-shadow:0 0 8px rgba(255,215,0,0.3);
+}
+.header .desc{
+    font-size:14px;
+    opacity:.9;
+    margin-top:4px;
+    color:#e6c86e;
+}
+.nav{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    background:rgba(15, 53, 37, 0.95);
+    position:sticky;
+    top:0;
+    z-index:99;
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid rgba(255,215,0,0.15);
+}
+.nav button{
+    padding:16px 8px;
+    border:none;
+    background:none;
+    font-size:15px;
+    color:#c2e0d2;
+    transition:all 0.3s;
+}
+.nav .active{
+    color:#ffd700;
+    font-weight:600;
+    border-bottom:2px solid #ffd700;
+}
+.page{display:none;padding:16px;max-width:768px;margin:0 auto}
+.page.show{display:block}
+.card{
+    background:#143d2b;
+    border-radius:18px;
+    padding:22px;
+    margin-bottom:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    border:1px solid rgba(255,215,0,0.18);
+}
+.title{
+    font-size:17px;
+    font-weight:600;
+    margin-bottom:18px;
+    color:#ffd700;
+    letter-spacing:0.5px;
+    text-shadow:0 0 6px rgba(255,215,0,0.25);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border-left:4px solid #ffd700;
+    padding-left:10px;
+}
+.btn{
+    width:100%;
+    background: linear-gradient(135deg,#245c42,#1a472a);
+    color:#ffd700;
+    border:1px solid rgba(255,215,0,0.3);
+    padding:14px 18px;
+    border-radius:50px;
+    font-size:16px;
+    margin-bottom:12px;
+    font-weight:500;
+    transition:all 0.3s;
+    text-align:left;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.btn-line{
+    background:rgba(255,255,255,0.05);
+    color:#ffd700;
+    border:1px solid rgba(255,215,0,0.35);
+}
+.input{
+    width:100%;
+    padding:14px 18px;
+    border:1px solid rgba(255,215,0,0.25);
+    border-radius:12px;
+    font-size:15px;
+    background:#0f3022;
+    color:#fff;
+}
+.input::placeholder{
+    color:#b8c9bf;
+}
+.answer{
+    background:#0f3022;
+    padding:18px;
+    border-radius:12px;
+    margin-top:16px;
+    line-height:1.6;
+    color:#f0e6c0;
+    border:1px solid rgba(255,215,0,0.2);
+}
+.video-scroll{height:70vh;overflow-y:auto;scroll-snap-type:y mandatory;border-radius:16px}
+.video-box{height:100%;scroll-snap-align:start;background:#000;border-radius:16px;position:relative;margin-bottom:10px}
+.video-box iframe{width:100%;height:100%;border-radius:16px}
+.collect{
+    position:absolute;top:24px;right:24px;
+    background:#0f3022;
+    color:#ffd700;
+    padding:8px 14px;
+    border-radius:50px;
+    font-size:13px;
+    border:1px solid rgba(255,215,0,0.25);
+    display:flex;
+    align-items:center;
+    gap:4px;
+}
+.item{
+    padding:14px 18px;
+    background:#0f3022;
+    border-radius:12px;
+    margin-bottom:10px;
+    color:#e6e6e6;
+    border:1px solid rgba(255,215,0,0.15);
+}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.badge{
+    padding:6px 12px;
+    background:rgba(255,215,0,0.15);
+    border-radius:50px;
+    font-size:12px;
+    color:#ffd700;
+    border:1px solid rgba(255,215,0,0.25);
+}
+video{
+    width:100%;
+    border-radius:12px;
+    background:#000;
+    margin-bottom:12px;
+    border:1px solid rgba(255,215,0,0.2);
+}
+#poseResult{
+    background:#0f3022;
+    padding:18px;
+    border-radius:12px;
+    margin-top:16px;
+    line-height:1.6;
+    color:#f0e6c0;
+    border:1px solid rgba(255,215,0,0.2);
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚡ 运动损伤康复系统</h1>
+  <p class="desc">🤖 AI咨询｜🏃 动作矫正｜💪 康复训练｜📋 个人档案</p>
+</div>
+<div class="nav">
+  <button onclick="goto(0)">🏠 首页</button>
+  <button class="active" onclick="goto(1)">👤 我的</button>
+  <button onclick="goto(2)">❓ AI问答</button>
+  <button onclick="goto(3)">🎯 康复训练</button>
+</div>
+
+<!-- 0 首页 -->
+<div class="page" id="p0">
+  <div class="card">
+    <div class="title">⚡ 快捷功能</div>
+    <button class="btn" onclick="goto(2)">🤖 AI 损伤咨询</button>
+    <button class="btn" onclick="goto(3)">🧍 动作AI分析</button>
+    <button class="btn" onclick="goto(1)">📋 我的档案</button>
+  </div>
+</div>
+
+<!-- 1 个人中心 -->
+<div class="page show" id="p1">
+  <div class="card">
+    <div class="title">🔐 账号注册 / 登录</div>
+    <input class="input" id="user" placeholder="👤 用户名">
+    <input class="input" id="pwd" type="password" placeholder="🔒 密码">
+    <button class="btn" onclick="register()">✅ 注册并登录</button>
+    <button class="btn btn-line" onclick="login()">🔑 已有账号登录</button>
+  </div>
+  <div class="card">
+    <div class="title">📋 个人信息</div>
+    <input class="input" id="name" placeholder="👤 姓名">
+    <input class="input" id="gender" placeholder="⚤ 性别">
+    <input class="input" id="age" placeholder="🎂 年龄">
+    <input class="input" id="history" placeholder="🩹 既往病史/运动损伤">
+    <button class="btn" onclick="saveInfo()">💾 保存信息</button>
+  </div>
+  <div class="card">
+    <div class="title">❤️ 我的收藏</div>
+    <div id="favBox" class="item">请先登录</div>
+  </div>
+  <div class="card">
+    <div class="title">🏅 我的勋章</div>
+    <div class="badges" id="badgeBox"></div>
+  </div>
+</div>
+
+<!-- 2 AI问答（通义千问） -->
+<div class="page" id="p2">
+  <div class="card">
+    <div class="title">🤖 通义千问AI 智能康复咨询</div>
+    <textarea class="input" id="q" style="height:120px" placeholder="输入：脚踝扭伤、膝盖痛、腰肌劳损..."></textarea>
+    <button class="btn" onclick="askQwen()">📤 发送</button>
+    <div id="a" style="display:none;margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- 3 康复训练 + 动作AI分析 -->
+<div class="page" id="p3">
+  <div class="card">
+    <div class="title">🔍 B站康复视频搜索</div>
+    <input class="input" id="search" placeholder="🔎 搜索康复视频">
+    <button class="btn" onclick="searchBilibili()">🚀 搜索</button>
+  </div>
+  <div class="card">
+    <div class="title">📹 动作自测｜AI姿势分析</div>
+    <video id="video" autoplay playsinline muted></video>
+    <button class="btn" onclick="startCamera()">📷 打开摄像头</button>
+    <button class="btn" onclick="analyzePose()">🧠 AI动作实时分析</button>
+    <div id="poseResult" style="display:none"></div>
+  </div>
+  <div class="card">
+    <div class="title">📅 今日康复打卡</div>
+    <button class="btn" onclick="doCheckIn()">✔️ 完成今日打卡</button>
+    <div id="checkInText" style="color:#ffd700;margin-top:10px;text-align:center;font-size:16px"></div>
+  </div>
+  <div class="video-scroll" id="videoList">
+    <div class="video-box">
+      <iframe src="https://player.bilibili.com/player.html?aid=1404966266&p=1"></iframe>
+      <div class="collect" onclick="collect(this)">❤️ 收藏</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================== 填入你的通义千问API‑KEY ======================
+const QWEN_KEY = "sk-8759f2725bbf463784598217770f45d7";
+const QWEN_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
+// 页面切换
+let pages = document.querySelectorAll('.page');
+let btns = document.querySelectorAll('.nav button');
+function goto(i){
+  pages.forEach(p=>p.classList.remove('show'));
+  btns.forEach(b=>b.classList.remove('active'));
+  pages[i].classList.add('show');
+  btns[i].classList.add('active');
+}
+
+// 注册登录
+function register(){
+  let u=document.getElementById('user').value,p=document.getElementById('pwd').value;
+  if(!u||!p)return alert('请输入账号密码');
+  localStorage.setItem('user',u);
+  localStorage.setItem('pwd',p);
+  alert('注册成功，自动登录');
+  goto(0);
+}
+function login(){
+  let u=document.getElementById('user').value,p=document.getElementById('pwd').value;
+  if(u===localStorage.getItem('user')&&p===localStorage.getItem('pwd')){
+    alert('登录成功');
+    goto(0);loadInfo();
+  }else{alert('账号或密码错误')}
+}
+function saveInfo(){
+  let data={
+    name:document.getElementById('name').value,
+    gender:document.getElementById('gender').value,
+    age:document.getElementById('age').value,
+    history:document.getElementById('history').value
+  };
+  localStorage.setItem('userInfo',JSON.stringify(data));
+  alert('信息已保存');
+}
+function loadInfo(){
+  let d=JSON.parse(localStorage.getItem('userInfo')||'{}');
+  document.getElementById('name').value=d.name||'';
+}
+function collect(el){
+  el.innerText=el.innerText=='❤️ 收藏'?'✅ 已收藏':'❤️ 收藏';
+}
+
+// 摄像头
+let video = document.getElementById('video');
+let mediaStream = null;
+async function startCamera(){
+  if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null;return;}
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    video.srcObject = mediaStream;
+  }catch(e){alert('请允许摄像头权限');}
+}
+
+// 文字AI问答
+async function askQwen(){
+  let q = document.getElementById('q').value.trim();
+  if(!q){alert('请输入问题');return;}
+  let a = document.getElementById('a');
+  a.style.display = 'block';
+  a.innerHTML = '<div class="answer">🤖 AI思考中...</div>';
+  try{
+    let res = await fetch(QWEN_URL,{
+      method:'POST',
+      headers:{
+        'Content‑Type':'application/json',
+        'Authorization':'Bearer ' + QWEN_KEY
+      },
+      body:JSON.stringify({
+        model:"qwen‑vl‑max",
+        messages:[
+          {role:"system",content:"你是专业运动损伤康复师，回答简洁专业"},
+          {role:"user",content:q}
+        ]
+      })
+    });
+    let json = await res.json();
+    let ans = json.choices[0].message.content;
+    a.innerHTML = `<div class="answer">${ans}</div>`;
+  }catch(e){
+    a.innerHTML = '<div class="answer">❌ 密钥错误，请检查</div>';
+  }
+}
+
+// 动作姿势AI分析
+async function analyzePose(){
+  if(!mediaStream){alert('请先打开摄像头');return;}
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video,0,0);
+  const base64 = canvas.toDataURL('image/jpeg');
+  const poseResult = document.getElementById('poseResult');
+  poseResult.style.display = 'block';
+  poseResult.innerHTML = '🧠 AI正在分析动作姿势...';
+
+  try{
+    let res = await fetch(QWEN_URL,{
+      method:'POST',
+      headers:{
+        'Content‑Type':'application/json',
+        'Authorization':'Bearer ' + QWEN_KEY
+      },
+      body:JSON.stringify({
+        model:"qwen‑vl‑max",
+        messages:[
+          {role:"system",content:"你是专业运动康复姿势评估师，分析运动姿势，指出问题、风险、矫正动作"},
+          {role:"user",content:[
+            {type:"text",text:"分析这个运动姿势，给出康复矫正建议"},
+            {type:"image_url",image_url:{url:base64}}
+          ]}
+        ]
+      })
+    });
+    let json = await res.json();
+    let ans = json.choices[0].message.content;
+    poseResult.innerHTML = `<div>${ans}</div>`;
+  }catch(e){
+    poseResult.innerHTML = '<div>❌ 分析失败，请检查密钥</div>';
+  }
+}
+
+// 打卡勋章
+function doCheckIn(){
+  let day=Number(localStorage.getItem('day')||0)+1;
+  localStorage.setItem('day',day);
+  document.getElementById('checkInText').innerText=`🔥 连续打卡：${day}天`;
+  let badges=[];
+  if(day>=1)badges.push('🌱 初窥门径');
+  if(day>=3)badges.push('💪 坚持不懈');
+  if(day>=7)badges.push('🏆 康复达人');
+  if(day>=15)badges.push('⭐ 运动大师');
+  let box=document.getElementById('badgeBox');
+  box.innerHTML='';
+  badges.forEach(b=>{let span=document.createElement('span');span.className='badge';span.innerText=b;box.appendChild(span);});
+  alert('打卡成功！');
+}
+
+// B站搜索
+function searchBilibili(){
+  let key=document.getElementById('search').value;
+  if(!key)return alert('请输入关键词');
+  window.open('https://search.bilibili.com/all?keyword='+encodeURIComponent(key));
+}
+
+window.onload=function(){
+  let day=localStorage.getItem('day');
+  if(day)document.getElementById('checkInText').innerText=`🔥 连续打卡：${day}天`;
+}
+</script>
+</body>
+</html>
