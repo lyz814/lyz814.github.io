@@ -255,8 +255,9 @@ video{
 </div>
 
 <script>
-// ====================== 填入你的通义千问API‑KEY ======================
-const QWEN_KEY = "sk-8759f2725bbf463784598217770f45d7";
+// ====================== sk-8759f2725bbf46378459821777Of45d7======================
+// 注意：在前端直接暴露密钥有安全风险，仅建议个人测试使用！
+const QWEN_KEY = "sk-8759f2725bbf46378459821777Of45d7;   // 替换成 sk- 开头的真实密钥
 const QWEN_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
 // 页面切换
@@ -314,37 +315,43 @@ async function startCamera(){
   }catch(e){alert('请允许摄像头权限');}
 }
 
-// 文字AI问答
+// 文字AI问答（调用通义千问）
 async function askQwen(){
   let q = document.getElementById('q').value.trim();
   if(!q){alert('请输入问题');return;}
-  let a = document.getElementById('a');
-  a.style.display = 'block';
-  a.innerHTML = '<div class="answer">🤖 AI思考中...</div>';
+  let aDiv = document.getElementById('a');
+  aDiv.style.display = 'block';
+  aDiv.innerHTML = '<div class="answer">🤖 AI思考中...</div>';
   try{
     let res = await fetch(QWEN_URL,{
       method:'POST',
       headers:{
-        'Content‑Type':'application/json',
-        'Authorization':'Bearer ' + QWEN_KEY
+        'Content-Type': 'application/json',   // 修正了奇怪的连字符
+        'Authorization': 'Bearer ' + QWEN_KEY
       },
       body:JSON.stringify({
-        model:"qwen‑vl‑max",
-        messages:[
-          {role:"system",content:"你是专业运动损伤康复师，回答简洁专业"},
-          {role:"user",content:q}
-        ]
+        model: "qwen-turbo",   // 可改为 qwen-plus 或 qwen-max，注意不要用中文短横
+        messages: [
+          {role: "system", content: "你是专业运动损伤康复师，回答简洁专业"},
+          {role: "user", content: q}
+        ],
+        temperature: 0.7
       })
     });
+    if(!res.ok){
+      let err = await res.json();
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
     let json = await res.json();
     let ans = json.choices[0].message.content;
-    a.innerHTML = `<div class="answer">${ans}</div>`;
+    aDiv.innerHTML = `<div class="answer">${ans.replace(/\n/g,'<br>')}</div>`;
   }catch(e){
-    a.innerHTML = '<div class="answer">❌ 密钥错误，请检查</div>';
+    console.error(e);
+    aDiv.innerHTML = `<div class="answer">❌ 请求失败：${e.message}。请检查密钥是否正确或网络是否通畅。</div>`;
   }
 }
 
-// 动作姿势AI分析
+// 动作姿势AI分析（带图像）
 async function analyzePose(){
   if(!mediaStream){alert('请先打开摄像头');return;}
   const canvas = document.createElement('canvas');
@@ -358,28 +365,37 @@ async function analyzePose(){
   poseResult.innerHTML = '🧠 AI正在分析动作姿势...';
 
   try{
+    // 注意：通义千问VL系列模型支持图像输入，模型名称用 qwen-vl-plus 或 qwen-vl-max
     let res = await fetch(QWEN_URL,{
       method:'POST',
       headers:{
-        'Content‑Type':'application/json',
-        'Authorization':'Bearer ' + QWEN_KEY
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + QWEN_KEY
       },
       body:JSON.stringify({
-        model:"qwen‑vl‑max",
-        messages:[
-          {role:"system",content:"你是专业运动康复姿势评估师，分析运动姿势，指出问题、风险、矫正动作"},
-          {role:"user",content:[
-            {type:"text",text:"分析这个运动姿势，给出康复矫正建议"},
-            {type:"image_url",image_url:{url:base64}}
-          ]}
-        ]
+        model: "qwen-vl-max",   // 视觉语言模型，注意VL是字母，不要写成vl-max?
+        messages: [
+          {
+            role: "user",
+            content: [
+              {type: "text", text: "分析这个运动姿势，指出可能存在的风险、问题，并给出康复矫正建议。要求专业、简洁。"},
+              {type: "image_url", image_url: {url: base64}}
+            ]
+          }
+        ],
+        temperature: 0.7
       })
     });
+    if(!res.ok){
+      let err = await res.json();
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
     let json = await res.json();
     let ans = json.choices[0].message.content;
-    poseResult.innerHTML = `<div>${ans}</div>`;
+    poseResult.innerHTML = `<div>${ans.replace(/\n/g,'<br>')}</div>`;
   }catch(e){
-    poseResult.innerHTML = '<div>❌ 分析失败，请检查密钥</div>';
+    console.error(e);
+    poseResult.innerHTML = `<div>❌ 分析失败：${e.message}。请检查密钥是否正确，或者模型名称是否支持图像输入。</div>`;
   }
 }
 
