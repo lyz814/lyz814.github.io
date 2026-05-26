@@ -171,10 +171,10 @@ video{
 <body>
 <div class="header">
   <h1>⚡ 运动损伤康复系统</h1>
-  <p class="desc">🤖 AI咨询｜🏃 动作矫正｜💪 康复训练｜📋 个人档案</p>
+  <p class="desc">🤖 损伤咨询｜🏃 动作矫正｜💪 康复训练｜📋 个人档案</p>
 </div>
 <div class="nav">
-  <button onclick="goto(0)">🏠 首页</button>
+  <button class="active" onclick="goto(0)">🏠 首页</button>
   <button onclick="goto(1)">👤 我的</button>
   <button onclick="goto(2)">❓ AI问答</button>
   <button onclick="goto(3)">🎯 康复训练</button>
@@ -184,7 +184,7 @@ video{
 <div class="page show" id="p0">
   <div class="card">
     <div class="title">⚡ 快捷功能</div>
-    <button class="btn" onclick="goto(2)">🤖 AI 损伤咨询</button>
+    <button class="btn" onclick="goto(2)">🤖  损伤咨询</button>
     <button class="btn" onclick="goto(3)">🧍 动作AI分析</button>
     <button class="btn" onclick="goto(1)">📋 我的档案</button>
   </div>
@@ -220,7 +220,7 @@ video{
 <!-- 2 AI问答（本地模拟回复，免密钥） -->
 <div class="page" id="p2">
   <div class="card">
-    <div class="title">🤖 AI 智能康复咨询</div>
+    <div class="title">🤖 智能康复咨询</div>
     <textarea class="input" id="q" style="height:120px" placeholder="输入：膝盖痛、脚踝扭伤、腰肌劳损..."></textarea>
     <button class="btn" onclick="askQwen()">📤 发送</button>
     <div id="a" style="display:none;margin-top:16px"></div>
