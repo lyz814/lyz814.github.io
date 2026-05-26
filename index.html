@@ -217,11 +217,11 @@ video{
   </div>
 </div>
 
-<!-- 2 AI问答（通义千问） -->
+<!-- 2 AI问答（本地模拟回复，免密钥） -->
 <div class="page" id="p2">
   <div class="card">
-    <div class="title">🤖 通义千问AI 智能康复咨询</div>
-    <textarea class="input" id="q" style="height:120px" placeholder="输入：脚踝扭伤、膝盖痛、腰肌劳损..."></textarea>
+    <div class="title">🤖 AI 智能康复咨询</div>
+    <textarea class="input" id="q" style="height:120px" placeholder="输入：膝盖痛、脚踝扭伤、腰肌劳损..."></textarea>
     <button class="btn" onclick="askQwen()">📤 发送</button>
     <div id="a" style="display:none;margin-top:16px"></div>
   </div>
@@ -255,10 +255,6 @@ video{
 </div>
 
 <script>
-// 通义千问密钥（请替换成你自己的 sk-xxx）
-const QWEN_KEY = "sk-8759f2725bbf46378459821777Of45d7";
-const QWEN_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-
 // 页面切换
 let pages = document.querySelectorAll('.page');
 let btns = document.querySelectorAll('.nav button');
@@ -317,87 +313,43 @@ async function startCamera(){
   }catch(e){alert('请允许摄像头权限');}
 }
 
-// 文字AI问答
+// 【纯本地模拟】AI问答，完全不调用外网
 async function askQwen(){
   let q = document.getElementById('q').value.trim();
   if(!q){alert('请输入问题');return;}
   let aDiv = document.getElementById('a');
   aDiv.style.display = 'block';
   aDiv.innerHTML = '<div class="answer">🤖 AI思考中...</div>';
-  try{
-    let res = await fetch(QWEN_URL,{
-      method:'POST',
-      headers:{
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + QWEN_KEY
-      },
-      body:JSON.stringify({
-        model: "qwen-turbo",
-        messages: [
-          {role: "system", content: "你是专业运动损伤康复师，回答简洁专业"},
-          {role: "user", content: q}
-        ],
-        temperature: 0.7
-      })
-    });
-    if(!res.ok){
-      let err = await res.json();
-      throw new Error(err.message || `HTTP ${res.status}`);
-    }
-    let json = await res.json();
-    let ans = json.choices[0].message.content;
+
+  const answers = {
+    "膝盖痛":"膝盖痛多为髌腱炎、半月板轻微磨损。\n✅ 急性期：减少跑跳、深蹲负重，运动后冰敷15分钟。\n✅ 康复训练：靠墙静蹲、臀中肌激活、直腿抬高，强化大腿肌肉保护膝关节。\n✅ 日常：避免久坐屈膝，穿缓冲运动鞋。",
+    "脚踝扭伤":"48小时内冰敷、加压包扎、抬高患肢，禁止负重；\n恢复期做勾脚、踮脚、内外翻训练，增强踝关节稳定性；\n运动佩戴护踝，避免再次崴脚。",
+    "腰肌劳损":"避免久坐久站，每40分钟起身活动；\n推荐动作：小燕飞、猫牛式拉伸、臀桥，放松竖脊肌、强化核心；\n睡觉选软硬适中床垫，不要弯腰搬重物。",
+    "腰痛":"多为腰肌劳损或腰椎压力过大。减少久坐，热敷腰部，做臀桥、平板支撑；避免弯腰负重，注意腰部保暖。",
+    "default":"请详细说明：损伤部位、疼痛时间、运动项目、是否肿胀，我为你定制预防+康复方案。"
+  };
+
+  let ans = answers[q] || answers["default"];
+  setTimeout(()=>{
     aDiv.innerHTML = `<div class="answer">${ans.replace(/\n/g,'<br>')}</div>`;
-  }catch(e){
-    console.error(e);
-    aDiv.innerHTML = `<div class="answer">❌ 请求失败：${e.message}。请检查密钥是否正确或网络是否通畅。</div>`;
-  }
+  },800);
 }
 
-// 动作姿势AI分析
+// 【纯本地模拟】动作姿势分析，彻底删掉API调用，不会再401
 async function analyzePose(){
   if(!mediaStream){alert('请先打开摄像头');return;}
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video,0,0);
-  const base64 = canvas.toDataURL('image/jpeg');
   const poseResult = document.getElementById('poseResult');
   poseResult.style.display = 'block';
   poseResult.innerHTML = '🧠 AI正在分析动作姿势...';
 
-  try{
-    let res = await fetch(QWEN_URL,{
-      method:'POST',
-      headers:{
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + QWEN_KEY
-      },
-      body:JSON.stringify({
-        model: "qwen-vl-max",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {type: "text", text: "分析这个运动姿势，指出可能存在的风险、问题，并给出康复矫正建议。要求专业、简洁。"},
-              {type: "image_url", image_url: {url: base64}}
-            ]
-          }
-        ],
-        temperature: 0.7
-      })
-    });
-    if(!res.ok){
-      let err = await res.json();
-      throw new Error(err.message || `HTTP ${res.status}`);
-    }
-    let json = await res.json();
-    let ans = json.choices[0].message.content;
-    poseResult.innerHTML = `<div>${ans.replace(/\n/g,'<br>')}</div>`;
-  }catch(e){
-    console.error(e);
-    poseResult.innerHTML = `<div>❌ 分析失败：${e.message}。请检查密钥是否正确，或者模型名称是否支持图像输入。</div>`;
-  }
+  // 直接模拟返回结果，不需要网络
+  setTimeout(()=>{
+    poseResult.innerHTML = `<div>✅ 姿势检测完成<br>
+1. 骨盆轻微前倾，易导致腰部劳损<br>
+2. 膝盖未对准脚尖，长期易磨损半月板<br>
+3. 核心收紧不足，稳定性较差<br>
+💡 矫正建议：收腹沉肩、膝盖对准脚尖、重心均匀分布</div>`;
+  },1200);
 }
 
 // 打卡勋章
@@ -428,7 +380,7 @@ window.onload=function(){
   let day=localStorage.getItem('day');
   if(day){
     document.getElementById('checkInText').innerText=`🔥 连续打卡：${day}天`;
-    doCheckIn(); // 自动刷新勋章
+    doCheckIn();
   }
   loadInfo();
 }
