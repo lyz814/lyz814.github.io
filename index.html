@@ -175,13 +175,13 @@ video{
 </div>
 <div class="nav">
   <button onclick="goto(0)">🏠 首页</button>
-  <button class="active" onclick="goto(1)">👤 我的</button>
+  <button onclick="goto(1)">👤 我的</button>
   <button onclick="goto(2)">❓ AI问答</button>
   <button onclick="goto(3)">🎯 康复训练</button>
 </div>
 
 <!-- 0 首页 -->
-<div class="page" id="p0">
+<div class="page show" id="p0">
   <div class="card">
     <div class="title">⚡ 快捷功能</div>
     <button class="btn" onclick="goto(2)">🤖 AI 损伤咨询</button>
@@ -191,7 +191,7 @@ video{
 </div>
 
 <!-- 1 个人中心 -->
-<div class="page show" id="p1">
+<div class="page" id="p1">
   <div class="card">
     <div class="title">🔐 账号注册 / 登录</div>
     <input class="input" id="user" placeholder="👤 用户名">
@@ -255,9 +255,8 @@ video{
 </div>
 
 <script>
-// ====================== sk-8759f2725bbf46378459821777Of45d7======================
-// 注意：在前端直接暴露密钥有安全风险，仅建议个人测试使用！
-const QWEN_KEY = "sk-8759f2725bbf46378459821777Of45d7;   // 替换成 sk- 开头的真实密钥
+// 通义千问密钥（请替换成你自己的 sk-xxx）
+const QWEN_KEY = "sk-8759f2725bbf46378459821777Of45d7";
 const QWEN_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
 // 页面切换
@@ -299,6 +298,9 @@ function saveInfo(){
 function loadInfo(){
   let d=JSON.parse(localStorage.getItem('userInfo')||'{}');
   document.getElementById('name').value=d.name||'';
+  document.getElementById('gender').value=d.gender||'';
+  document.getElementById('age').value=d.age||'';
+  document.getElementById('history').value=d.history||'';
 }
 function collect(el){
   el.innerText=el.innerText=='❤️ 收藏'?'✅ 已收藏':'❤️ 收藏';
@@ -315,7 +317,7 @@ async function startCamera(){
   }catch(e){alert('请允许摄像头权限');}
 }
 
-// 文字AI问答（调用通义千问）
+// 文字AI问答
 async function askQwen(){
   let q = document.getElementById('q').value.trim();
   if(!q){alert('请输入问题');return;}
@@ -326,11 +328,11 @@ async function askQwen(){
     let res = await fetch(QWEN_URL,{
       method:'POST',
       headers:{
-        'Content-Type': 'application/json',   // 修正了奇怪的连字符
+        'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + QWEN_KEY
       },
       body:JSON.stringify({
-        model: "qwen-turbo",   // 可改为 qwen-plus 或 qwen-max，注意不要用中文短横
+        model: "qwen-turbo",
         messages: [
           {role: "system", content: "你是专业运动损伤康复师，回答简洁专业"},
           {role: "user", content: q}
@@ -351,7 +353,7 @@ async function askQwen(){
   }
 }
 
-// 动作姿势AI分析（带图像）
+// 动作姿势AI分析
 async function analyzePose(){
   if(!mediaStream){alert('请先打开摄像头');return;}
   const canvas = document.createElement('canvas');
@@ -365,7 +367,6 @@ async function analyzePose(){
   poseResult.innerHTML = '🧠 AI正在分析动作姿势...';
 
   try{
-    // 注意：通义千问VL系列模型支持图像输入，模型名称用 qwen-vl-plus 或 qwen-vl-max
     let res = await fetch(QWEN_URL,{
       method:'POST',
       headers:{
@@ -373,7 +374,7 @@ async function analyzePose(){
         'Authorization': 'Bearer ' + QWEN_KEY
       },
       body:JSON.stringify({
-        model: "qwen-vl-max",   // 视觉语言模型，注意VL是字母，不要写成vl-max?
+        model: "qwen-vl-max",
         messages: [
           {
             role: "user",
@@ -422,9 +423,14 @@ function searchBilibili(){
   window.open('https://search.bilibili.com/all?keyword='+encodeURIComponent(key));
 }
 
+// 页面加载初始化
 window.onload=function(){
   let day=localStorage.getItem('day');
-  if(day)document.getElementById('checkInText').innerText=`🔥 连续打卡：${day}天`;
+  if(day){
+    document.getElementById('checkInText').innerText=`🔥 连续打卡：${day}天`;
+    doCheckIn(); // 自动刷新勋章
+  }
+  loadInfo();
 }
 </script>
 </body>
